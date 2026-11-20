@@ -1,4 +1,5 @@
 import os
+import signal
 import socket
 import subprocess
 import sys
@@ -30,7 +31,7 @@ def base_url():
 
     port = _free_port()
     proc = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "app.main:app", "--port", str(port), "--log-level", "warning"],
+        [sys.executable, "-m", "coverage", "run", "--parallel-mode", "-m", "uvicorn", "app.main:app", "--port", str(port), "--log-level", "warning"],
         cwd=ROOT,
     )
     url = f"http://127.0.0.1:{port}"
@@ -46,7 +47,7 @@ def base_url():
             raise RuntimeError("mock server did not start in 15s")
         yield url
     finally:
-        proc.terminate()
+        proc.send_signal(signal.SIGINT)
         proc.wait(timeout=5)
 
 

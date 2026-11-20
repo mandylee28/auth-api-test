@@ -1,8 +1,10 @@
 __pycache__/
+.coverage
+.coverage.*
+.DS_Store
 .pytest_cache/
 .venv/
 *.pyc
-report.html
-.coverage
-.coverage.*
 htmlcov/
+report.html
+report.xml

@@ -40,15 +40,15 @@ class RefreshRequest(BaseModel):
 
 def _issue_tokens(email: str):
     access_token = secrets.token_urlsafe(32)
-    TOKENS[access_token] = {"email": email, "expires_at": time.time() + ACCESS_TOKEN_TTL_SECONDS}
     refresh_token = secrets.token_urlsafe(32)
+    TOKENS[access_token] = {"email": email, "expires_at": time.time() + ACCESS_TOKEN_TTL_SECONDS, "refresh_token": refresh_token}
     REFRESH_TOKENS[refresh_token] = {"email": email, "expires_at": time.time() + REFRESH_TOKEN_TTL_SECONDS}
     return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "expires_in": ACCESS_TOKEN_TTL_SECONDS,
-        "refresh_token": refresh_token,
-    }
+            "access_token": access_token,
+            "token_type": "bearer",
+            "expires_in": ACCESS_TOKEN_TTL_SECONDS,
+            "refresh_token": refresh_token,
+        }
 
 @app.get("/health")
 def health():
@@ -119,6 +119,20 @@ def refresh(body: RefreshRequest):
     REFRESH_TOKENS.pop(body.refresh_token, None)
     return _issue_tokens(email)
 
+@app.post("/logout")
+def logout(authorization: str | None = Header(default=None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="missing token")
+    token = authorization.removeprefix("Bearer ").strip()
+    record = TOKENS.get(token)
+    if record is None:
+        raise HTTPException(status_code=401, detail="invalid token")
+    if time.time() > record["expires_at"]:
+        TOKENS.pop(token, None)
+        raise HTTPException(status_code=401, detail="token expired")
+    REFRESH_TOKENS.pop(record.get("refresh_token"), None)
+    TOKENS.pop(token, None)
+    return {"status": "logged out"}
 
 @app.get("/me")
 def me(authorization: str | None = Header(default=None)):

@@ -12,7 +12,11 @@ from pydantic import BaseModel
 app = FastAPI(title="Mock Auth Service")
 
 USERS = {"alice@example.com": "Passw0rd!", "bob@example.com": "BobPass123!"}
-TOKENS: dict[str, str] = {}  # token -> email
+TOKENS: dict[str, dict] = {}  # token -> {"email": ..., "expires_at": ...}
+REFRESH_TOKENS: dict[str, dict] = {}  # refresh_token -> {"email": ..., "expires_at": ...}
+ACCESS_TOKEN_TTL_SECONDS = 3600
+REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 3600
+
 TWO_FA_USERS = {"bob@example.com"}
 TWO_FA_CODE = "123456"
 PENDING_2FA: dict[str, str] = {} #temp_token -> email
@@ -31,6 +35,20 @@ class Verify2FARequest(BaseModel):
     code: str
     temp_token: str
 
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+def _issue_tokens(email: str):
+    access_token = secrets.token_urlsafe(32)
+    TOKENS[access_token] = {"email": email, "expires_at": time.time() + ACCESS_TOKEN_TTL_SECONDS}
+    refresh_token = secrets.token_urlsafe(32)
+    REFRESH_TOKENS[refresh_token] = {"email": email, "expires_at": time.time() + REFRESH_TOKEN_TTL_SECONDS}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires_in": ACCESS_TOKEN_TTL_SECONDS,
+        "refresh_token": refresh_token,
+    }
 
 @app.get("/health")
 def health():
@@ -44,6 +62,7 @@ def reset():
     FAILED_ATTEMPTS.clear()
     LOCKED_UNTIL.clear()
     PENDING_2FA.clear()
+    REFRESH_TOKENS.clear()
     return {"status": "reset"}
 
 
@@ -76,9 +95,7 @@ def login(body: LoginRequest):
     FAILED_ATTEMPTS.pop(body.email, None)
     LOCKED_UNTIL.pop(body.email, None)
 
-    token = secrets.token_urlsafe(32)
-    TOKENS[token] = body.email
-    return {"access_token": token, "token_type": "bearer"}
+    return _issue_tokens(body.email)
 
 @app.post("/verify-2fa")
 def verify_2fa(body: Verify2FARequest):
@@ -88,15 +105,31 @@ def verify_2fa(body: Verify2FARequest):
     if body.code != TWO_FA_CODE:
         raise HTTPException(status_code=401, detail="invalid 2fa code")
     PENDING_2FA.pop(body.temp_token, None)
-    token = secrets.token_urlsafe(32)
-    TOKENS[token] = email
-    return {"access_token": token, "token_type": "bearer"}
+    return _issue_tokens(email)
+
+@app.post("/refresh")
+def refresh(body: RefreshRequest):
+    record = REFRESH_TOKENS.get(body.refresh_token)
+    if record is None:
+        raise HTTPException(status_code=401, detail="invalid refresh token")
+    if time.time() > record["expires_at"]:
+        REFRESH_TOKENS.pop(body.refresh_token, None)
+        raise HTTPException(status_code=401, detail="refresh token expired")
+    email = record["email"]
+    REFRESH_TOKENS.pop(body.refresh_token, None)
+    return _issue_tokens(email)
+
 
 @app.get("/me")
 def me(authorization: str | None = Header(default=None)):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="missing token")
-    email = TOKENS.get(authorization.removeprefix("Bearer ").strip())
-    if email is None:
+    token = authorization.removeprefix("Bearer ").strip()
+    record = TOKENS.get(token)
+    if record is None:
         raise HTTPException(status_code=401, detail="invalid token")
-    return {"email": email}
+    if time.time() > record["expires_at"]:
+        TOKENS.pop(token, None)
+        raise HTTPException(status_code=401, detail="token expired")
+    return {"email": record["email"]}
+

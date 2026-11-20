@@ -11,8 +11,12 @@ from pydantic import BaseModel
 
 app = FastAPI(title="Mock Auth Service")
 
-USERS = {"alice@example.com": "Passw0rd!"}
+USERS = {"alice@example.com": "Passw0rd!", "bob@example.com": "BobPass123!"}
 TOKENS: dict[str, str] = {}  # token -> email
+TWO_FA_USERS = {"bob@example.com"}
+TWO_FA_CODE = "123456"
+PENDING_2FA: dict[str, str] = {} #temp_token -> email
+
 MAX_FAILED_ATTEMPTS = 5
 LOCKOUT_SECONDS = 300
 FAILED_ATTEMPTS = {}
@@ -22,6 +26,10 @@ LOCKED_UNTIL = {}
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+class Verify2FARequest(BaseModel):
+    code: str
+    temp_token: str
 
 
 @app.get("/health")
@@ -35,6 +43,7 @@ def reset():
     TOKENS.clear()
     FAILED_ATTEMPTS.clear()
     LOCKED_UNTIL.clear()
+    PENDING_2FA.clear()
     return {"status": "reset"}
 
 
@@ -58,6 +67,12 @@ def login(body: LoginRequest):
             LOCKED_UNTIL[body.email] = time.time() + LOCKOUT_SECONDS
         raise HTTPException(status_code=401, detail="invalid credentials")
 
+    if body.email in TWO_FA_USERS:
+        temp_token = secrets.token_urlsafe(32)
+        PENDING_2FA[temp_token] = body.email
+        return {"requires_2fa": True, "temp_token": temp_token}
+
+
     FAILED_ATTEMPTS.pop(body.email, None)
     LOCKED_UNTIL.pop(body.email, None)
 
@@ -65,6 +80,17 @@ def login(body: LoginRequest):
     TOKENS[token] = body.email
     return {"access_token": token, "token_type": "bearer"}
 
+@app.post("/verify-2fa")
+def verify_2fa(body: Verify2FARequest):
+    email = PENDING_2FA.get(body.temp_token)
+    if email is None:
+        raise HTTPException(status_code=401, detail="invalid temp token")
+    if body.code != TWO_FA_CODE:
+        raise HTTPException(status_code=401, detail="invalid 2fa code")
+    PENDING_2FA.pop(body.temp_token, None)
+    token = secrets.token_urlsafe(32)
+    TOKENS[token] = email
+    return {"access_token": token, "token_type": "bearer"}
 
 @app.get("/me")
 def me(authorization: str | None = Header(default=None)):

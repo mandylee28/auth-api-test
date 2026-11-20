@@ -25,6 +25,13 @@ class AuthClient:
             timeout=self.timeout,
         )
 
+    def verify_2fa(self, temp_token: str, code: str) -> requests.Response:
+        return self.session.post(
+            self._url("/verify-2fa"),
+            json={"temp_token": temp_token, "code": code},
+            timeout=self.timeout,
+        )
+
     def post_raw(self, path: str, **kwargs) -> requests.Response:
         """For malformed-request tests that the typed helpers cannot express."""
         return self.session.post(self._url(path), timeout=self.timeout, **kwargs)

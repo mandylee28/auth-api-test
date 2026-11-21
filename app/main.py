@@ -3,6 +3,7 @@
 Week 1 scope: /login, /me, /health, /reset.
 Lockout and 2FA are added in week 2.
 """
+
 import secrets
 import time
 
@@ -19,7 +20,7 @@ REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 3600
 
 TWO_FA_USERS = {"bob@example.com"}
 TWO_FA_CODE = "123456"
-PENDING_2FA: dict[str, str] = {} #temp_token -> email
+PENDING_2FA: dict[str, str] = {}  # temp_token -> email
 
 MAX_FAILED_ATTEMPTS = 5
 LOCKOUT_SECONDS = 300
@@ -31,24 +32,35 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
+
 class Verify2FARequest(BaseModel):
     code: str
     temp_token: str
 
+
 class RefreshRequest(BaseModel):
     refresh_token: str
+
 
 def _issue_tokens(email: str):
     access_token = secrets.token_urlsafe(32)
     refresh_token = secrets.token_urlsafe(32)
-    TOKENS[access_token] = {"email": email, "expires_at": time.time() + ACCESS_TOKEN_TTL_SECONDS, "refresh_token": refresh_token}
-    REFRESH_TOKENS[refresh_token] = {"email": email, "expires_at": time.time() + REFRESH_TOKEN_TTL_SECONDS}
+    TOKENS[access_token] = {
+        "email": email,
+        "expires_at": time.time() + ACCESS_TOKEN_TTL_SECONDS,
+        "refresh_token": refresh_token,
+    }
+    REFRESH_TOKENS[refresh_token] = {
+        "email": email,
+        "expires_at": time.time() + REFRESH_TOKEN_TTL_SECONDS,
+    }
     return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "expires_in": ACCESS_TOKEN_TTL_SECONDS,
-            "refresh_token": refresh_token,
-        }
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires_in": ACCESS_TOKEN_TTL_SECONDS,
+        "refresh_token": refresh_token,
+    }
+
 
 @app.get("/health")
 def health():
@@ -91,11 +103,11 @@ def login(body: LoginRequest):
         PENDING_2FA[temp_token] = body.email
         return {"requires_2fa": True, "temp_token": temp_token}
 
-
     FAILED_ATTEMPTS.pop(body.email, None)
     LOCKED_UNTIL.pop(body.email, None)
 
     return _issue_tokens(body.email)
+
 
 @app.post("/verify-2fa")
 def verify_2fa(body: Verify2FARequest):
@@ -106,6 +118,7 @@ def verify_2fa(body: Verify2FARequest):
         raise HTTPException(status_code=401, detail="invalid 2fa code")
     PENDING_2FA.pop(body.temp_token, None)
     return _issue_tokens(email)
+
 
 @app.post("/refresh")
 def refresh(body: RefreshRequest):
@@ -118,6 +131,7 @@ def refresh(body: RefreshRequest):
     email = record["email"]
     REFRESH_TOKENS.pop(body.refresh_token, None)
     return _issue_tokens(email)
+
 
 @app.post("/logout")
 def logout(authorization: str | None = Header(default=None)):
@@ -134,6 +148,7 @@ def logout(authorization: str | None = Header(default=None)):
     TOKENS.pop(token, None)
     return {"status": "logged out"}
 
+
 @app.get("/me")
 def me(authorization: str | None = Header(default=None)):
     if not authorization or not authorization.startswith("Bearer "):
@@ -146,4 +161,3 @@ def me(authorization: str | None = Header(default=None)):
         TOKENS.pop(token, None)
         raise HTTPException(status_code=401, detail="token expired")
     return {"email": record["email"]}
-

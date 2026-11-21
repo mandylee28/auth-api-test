@@ -1,4 +1,5 @@
-import time
+import time  # noqa: F401  (used by the commented-out expiry test below)
+
 
 def test_login_returns_refresh_token_and_expires_in(client, valid_user):
     resp = client.login(**valid_user)
@@ -53,6 +54,7 @@ def test_bob_verify_2fa_returns_refresh_token(client):
     assert resp.status_code == 200
     assert resp.json()["refresh_token"]
     assert resp.json()["expires_in"] == 3600
+
 
 # def test_access_token_expires_after_ttl(client, valid_user):
 #     token = client.login(**valid_user).json()["access_token"]

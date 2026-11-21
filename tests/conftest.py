@@ -31,7 +31,20 @@ def base_url():
 
     port = _free_port()
     proc = subprocess.Popen(
-        [sys.executable, "-m", "coverage", "run", "--parallel-mode", "-m", "uvicorn", "app.main:app", "--port", str(port), "--log-level", "warning"],
+        [
+            sys.executable,
+            "-m",
+            "coverage",
+            "run",
+            "--parallel-mode",
+            "-m",
+            "uvicorn",
+            "app.main:app",
+            "--port",
+            str(port),
+            "--log-level",
+            "warning",
+        ],
         cwd=ROOT,
     )
     url = f"http://127.0.0.1:{port}"

@@ -1,3 +1,6 @@
+import time
+
+
 def test_logout_revokes_access_token(client, valid_user):
     token = client.login(**valid_user).json()["access_token"]
     assert client.me(token).status_code == 200
@@ -48,3 +51,13 @@ def test_logout_one_session_does_not_affect_other(client, valid_user):
 
     assert client.me(first["access_token"]).status_code == 401
     assert client.me(second["access_token"]).status_code == 200
+
+
+def test_logout_with_expired_token_returns_401(client, valid_user):
+    token = client.login(**valid_user).json()["access_token"]
+
+    time.sleep(3)
+
+    resp = client.logout(token)
+    assert resp.status_code == 401
+    assert resp.json()["detail"] == "token expired"

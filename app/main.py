@@ -1,9 +1,4 @@
-"""Mock authentication service used as the system under test.
-
-Week 1 scope: /login, /me, /health, /reset.
-Lockout and 2FA are added in week 2.
-"""
-
+import os
 import secrets
 import time
 
@@ -15,15 +10,15 @@ app = FastAPI(title="Mock Auth Service")
 USERS = {"alice@example.com": "Passw0rd!", "bob@example.com": "BobPass123!"}
 TOKENS: dict[str, dict] = {}  # token -> {"email": ..., "expires_at": ...}
 REFRESH_TOKENS: dict[str, dict] = {}  # refresh_token -> {"email": ..., "expires_at": ...}
-ACCESS_TOKEN_TTL_SECONDS = 3600
-REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 3600
+ACCESS_TOKEN_TTL_SECONDS = int(os.environ.get("ACCESS_TOKEN_TTL_SECONDS", "3600"))
+REFRESH_TOKEN_TTL_SECONDS = int(os.environ.get("REFRESH_TOKEN_TTL_SECONDS", str(7 * 24 * 3600)))
+LOCKOUT_SECONDS = int(os.environ.get("LOCKOUT_SECONDS", "300"))
 
 TWO_FA_USERS = {"bob@example.com"}
 TWO_FA_CODE = "123456"
 PENDING_2FA: dict[str, str] = {}  # temp_token -> email
 
 MAX_FAILED_ATTEMPTS = 5
-LOCKOUT_SECONDS = 300
 FAILED_ATTEMPTS = {}
 LOCKED_UNTIL = {}
 

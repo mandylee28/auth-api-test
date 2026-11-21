@@ -13,6 +13,12 @@ from lib.client import AuthClient
 
 ROOT = Path(__file__).resolve().parent.parent
 VALID_USER = {"email": "alice@example.com", "password": "Passw0rd!"}
+env = {
+    **os.environ,
+    "ACCESS_TOKEN_TTL_SECONDS": "2",
+    "REFRESH_TOKEN_TTL_SECONDS": "5",
+    "LOCKOUT_SECONDS": "2",
+}
 
 
 def _free_port() -> int:
@@ -46,6 +52,7 @@ def base_url():
             "warning",
         ],
         cwd=ROOT,
+        env=env,
     )
     url = f"http://127.0.0.1:{port}"
     try:

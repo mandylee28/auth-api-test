@@ -1,5 +1,6 @@
 """Thin API client. Tests talk to this, never to requests directly,
 so a change in the API only needs fixing in one place (same idea as Page Object Model)."""
+
 import requests
 
 

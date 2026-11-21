@@ -1,0 +1,12 @@
+{
+  "email_and_password_required": "電子郵件和密碼不能為空",
+  "account_locked": "帳號已鎖定",
+  "invalid_credentials": "電子郵件或密碼不正確",
+  "invalid_temp_token": "臨時令牌無效",
+  "invalid_2fa_code": "兩步驗證碼不正確",
+  "invalid_refresh_token": "更新令牌無效",
+  "refresh_token_expired": "更新令牌已過期",
+  "missing_token": "缺少令牌",
+  "invalid_token": "令牌無效",
+  "token_expired": "令牌已過期"
+}

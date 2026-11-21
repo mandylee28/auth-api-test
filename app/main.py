@@ -1,9 +1,13 @@
 import os
 import secrets
 import time
+import json
+
 
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
+from pathlib import Path
+
 
 app = FastAPI(title="Mock Auth Service")
 
@@ -21,6 +25,25 @@ PENDING_2FA: dict[str, str] = {}  # temp_token -> email
 MAX_FAILED_ATTEMPTS = 5
 FAILED_ATTEMPTS = {}
 LOCKED_UNTIL = {}
+LOCALES_DIR = Path(__file__).resolve().parent.parent / "locales"
+
+
+def _load_messages() -> dict[str, dict[str, str]]:
+    """Load one JSON file per language from locales/; English is the fallback."""
+    messages = {}
+    for path in sorted(LOCALES_DIR.glob("*.json")):
+        messages[path.stem] = json.loads(path.read_text(encoding="utf-8"))
+    assert "en" in messages, "locales/en.json is required as the fallback language"
+    return messages
+
+
+MESSAGES = _load_messages()
+
+
+def _t(key: str, accept_language: str | None) -> str:
+    """Pick the message for the requested language; fall back to English."""
+    lang = (accept_language or "").split(",")[0].strip().split(";")[0].strip()
+    return MESSAGES.get(lang, MESSAGES["en"])[key]
 
 
 class LoginRequest(BaseModel):
@@ -74,13 +97,15 @@ def reset():
 
 
 @app.post("/login")
-def login(body: LoginRequest):
+def login(body: LoginRequest, accept_language: str | None = Header(default=None)):
     if not body.email.strip() or not body.password:
-        raise HTTPException(status_code=400, detail="email and password are required")
+        raise HTTPException(
+            status_code=400, detail=_t("email_and_password_required", accept_language)
+        )
 
     locked_until = LOCKED_UNTIL.get(body.email)
     if locked_until and time.time() < locked_until:
-        raise HTTPException(status_code=423, detail="account locked")
+        raise HTTPException(status_code=423, detail=_t("account_locked", accept_language))
     if locked_until:
         LOCKED_UNTIL.pop(body.email, None)
         FAILED_ATTEMPTS[body.email] = 0
@@ -91,7 +116,7 @@ def login(body: LoginRequest):
         FAILED_ATTEMPTS[body.email] = count
         if count >= MAX_FAILED_ATTEMPTS:
             LOCKED_UNTIL[body.email] = time.time() + LOCKOUT_SECONDS
-        raise HTTPException(status_code=401, detail="invalid credentials")
+        raise HTTPException(status_code=401, detail=_t("invalid_credentials", accept_language))
 
     if body.email in TWO_FA_USERS:
         temp_token = secrets.token_urlsafe(32)
@@ -105,54 +130,60 @@ def login(body: LoginRequest):
 
 
 @app.post("/verify-2fa")
-def verify_2fa(body: Verify2FARequest):
+def verify_2fa(body: Verify2FARequest, accept_language: str | None = Header(default=None)):
     email = PENDING_2FA.get(body.temp_token)
     if email is None:
-        raise HTTPException(status_code=401, detail="invalid temp token")
+        raise HTTPException(status_code=401, detail=_t("invalid_temp_token", accept_language))
     if body.code != TWO_FA_CODE:
-        raise HTTPException(status_code=401, detail="invalid 2fa code")
+        raise HTTPException(status_code=401, detail=_t("invalid_2fa_code", accept_language))
     PENDING_2FA.pop(body.temp_token, None)
     return _issue_tokens(email)
 
 
 @app.post("/refresh")
-def refresh(body: RefreshRequest):
+def refresh(body: RefreshRequest, accept_language: str | None = Header(default=None)):
     record = REFRESH_TOKENS.get(body.refresh_token)
     if record is None:
-        raise HTTPException(status_code=401, detail="invalid refresh token")
+        raise HTTPException(status_code=401, detail=_t("invalid_refresh_token", accept_language))
     if time.time() > record["expires_at"]:
         REFRESH_TOKENS.pop(body.refresh_token, None)
-        raise HTTPException(status_code=401, detail="refresh token expired")
+        raise HTTPException(status_code=401, detail=_t("refresh_token_expired", accept_language))
     email = record["email"]
     REFRESH_TOKENS.pop(body.refresh_token, None)
     return _issue_tokens(email)
 
 
 @app.post("/logout")
-def logout(authorization: str | None = Header(default=None)):
+def logout(
+    authorization: str | None = Header(default=None),
+    accept_language: str | None = Header(default=None),
+):
     if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="missing token")
+        raise HTTPException(status_code=401, detail=_t("missing_token", accept_language))
     token = authorization.removeprefix("Bearer ").strip()
     record = TOKENS.get(token)
     if record is None:
-        raise HTTPException(status_code=401, detail="invalid token")
+        raise HTTPException(status_code=401, detail=_t("invalid_token", accept_language))
     if time.time() > record["expires_at"]:
         TOKENS.pop(token, None)
-        raise HTTPException(status_code=401, detail="token expired")
+        raise HTTPException(status_code=401, detail=_t("token_expired", accept_language))
     REFRESH_TOKENS.pop(record.get("refresh_token"), None)
     TOKENS.pop(token, None)
     return {"status": "logged out"}
 
 
 @app.get("/me")
-def me(authorization: str | None = Header(default=None)):
+def me(
+    authorization: str | None = Header(default=None),
+    accept_language: str | None = Header(default=None),
+):
     if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="missing token")
+        raise HTTPException(status_code=401, detail=_t("missing_token", accept_language))
     token = authorization.removeprefix("Bearer ").strip()
     record = TOKENS.get(token)
     if record is None:
-        raise HTTPException(status_code=401, detail="invalid token")
+        raise HTTPException(status_code=401, detail=_t("invalid_token", accept_language))
     if time.time() > record["expires_at"]:
         TOKENS.pop(token, None)
-        raise HTTPException(status_code=401, detail="token expired")
+        raise HTTPException(status_code=401, detail=_t("token_expired", accept_language))
     return {"email": record["email"]}

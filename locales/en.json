@@ -1,0 +1,12 @@
+{
+  "email_and_password_required": "email and password are required",
+  "account_locked": "account locked",
+  "invalid_credentials": "invalid credentials",
+  "invalid_temp_token": "invalid temp token",
+  "invalid_2fa_code": "invalid 2fa code",
+  "invalid_refresh_token": "invalid refresh token",
+  "refresh_token_expired": "refresh token expired",
+  "missing_token": "missing token",
+  "invalid_token": "invalid token",
+  "token_expired": "token expired"
+}

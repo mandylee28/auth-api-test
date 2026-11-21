@@ -1,0 +1,12 @@
+{
+  "email_and_password_required": "E-mel dan kata laluan diperlukan",
+  "account_locked": "Akaun dikunci",
+  "invalid_credentials": "E-mel atau kata laluan tidak sah",
+  "invalid_temp_token": "Token sementara tidak sah",
+  "invalid_2fa_code": "Kod 2FA tidak sah",
+  "invalid_refresh_token": "Token refresh tidak sah",
+  "refresh_token_expired": "Token refresh telah tamat tempoh",
+  "missing_token": "Token tiada",
+  "invalid_token": "Token tidak sah",
+  "token_expired": "Token telah tamat tempoh"
+}

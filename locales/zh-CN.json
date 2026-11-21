@@ -1,0 +1,12 @@
+{
+  "email_and_password_required": "邮箱和密码不能为空",
+  "account_locked": "账号已锁定",
+  "invalid_credentials": "邮箱或密码不正确",
+  "invalid_temp_token": "临时令牌无效",
+  "invalid_2fa_code": "两步验证码不正确",
+  "invalid_refresh_token": "刷新令牌无效",
+  "refresh_token_expired": "刷新令牌已过期",
+  "missing_token": "缺少令牌",
+  "invalid_token": "令牌无效",
+  "token_expired": "令牌已过期"
+}

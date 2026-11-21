@@ -8,5 +8,10 @@
   "refresh_token_expired": "Token refresh telah tamat tempoh",
   "missing_token": "Token tiada",
   "invalid_token": "Token tidak sah",
-  "token_expired": "Token telah tamat tempoh"
+  "token_expired": "Token telah tamat tempoh",
+  "unknown_timezone": "Zon waktu tidak diketahui",
+  "time_message": "{country} sekarang {day}/{month} {hour:02d}:{minute:02d}",
+  "country_bangkok": "Thailand",
+  "country_singapore": "Singapura",
+  "country_seoul": "Korea Selatan"
 }

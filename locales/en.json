@@ -8,5 +8,10 @@
   "refresh_token_expired": "refresh token expired",
   "missing_token": "missing token",
   "invalid_token": "invalid token",
-  "token_expired": "token expired"
+  "token_expired": "token expired",
+  "unknown_timezone": "unknown timezone",
+  "time_message": "{country} is now {month}/{day} {hour:02d}:{minute:02d}",
+  "country_bangkok": "Thailand",
+  "country_singapore": "Singapore",
+  "country_seoul": "South Korea"
 }

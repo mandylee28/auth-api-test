@@ -7,6 +7,8 @@ import json
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 from pathlib import Path
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 
 app = FastAPI(title="Mock Auth Service")
@@ -40,10 +42,15 @@ def _load_messages() -> dict[str, dict[str, str]]:
 MESSAGES = _load_messages()
 
 
+def _messages_for(accept_language: str | None) -> dict[str, str]:
+    """Messages for the requested language; fall back to English."""
+    lang = (accept_language or "").split(",")[0].strip().split(";")[0].strip()
+    return MESSAGES.get(lang, MESSAGES["en"])
+
+
 def _t(key: str, accept_language: str | None) -> str:
     """Pick the message for the requested language; fall back to English."""
-    lang = (accept_language or "").split(",")[0].strip().split(";")[0].strip()
-    return MESSAGES.get(lang, MESSAGES["en"])[key]
+    return _messages_for(accept_language)[key]
 
 
 class LoginRequest(BaseModel):
@@ -187,3 +194,33 @@ def me(
         TOKENS.pop(token, None)
         raise HTTPException(status_code=401, detail=_t("token_expired", accept_language))
     return {"email": record["email"]}
+
+
+TIMEZONE_COUNTRIES = {
+    "Asia/Bangkok": "country_bangkok",
+    "Asia/Singapore": "country_singapore",
+    "Asia/Seoul": "country_seoul",
+}
+
+
+@app.get("/time")
+def get_time(
+    tz: str,
+    at: int | None = None,
+    accept_language: str | None = Header(default=None),
+):
+    if tz not in TIMEZONE_COUNTRIES:
+        raise HTTPException(status_code=400, detail=_t("unknown_timezone", accept_language))
+
+    instant = at if at is not None else int(time.time())
+    local = datetime.fromtimestamp(instant, tz=ZoneInfo(tz))
+    messages = _messages_for(accept_language)
+    country = messages[TIMEZONE_COUNTRIES[tz]]
+    message = messages["time_message"].format(
+        country=country,
+        month=local.month,
+        day=local.day,
+        hour=local.hour,
+        minute=local.minute,
+    )
+    return {"timezone": tz, "country": country, "message": message}

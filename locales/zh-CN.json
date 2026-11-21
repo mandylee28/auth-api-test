@@ -8,5 +8,10 @@
   "refresh_token_expired": "刷新令牌已过期",
   "missing_token": "缺少令牌",
   "invalid_token": "令牌无效",
-  "token_expired": "令牌已过期"
+  "token_expired": "令牌已过期",
+  "unknown_timezone": "未知时区",
+  "time_message": "{country}现在是{month}月{day}日{hour:02d}:{minute:02d}",
+  "country_bangkok": "泰国",
+  "country_singapore": "新加坡",
+  "country_seoul": "韩国"
 }

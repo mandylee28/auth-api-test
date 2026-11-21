@@ -61,3 +61,14 @@ class AuthClient:
         headers = {"Authorization": f"Bearer {token}"} if token else {}
         headers.update(_lang_headers(lang))
         return self.session.get(self._url("/me"), headers=headers, timeout=self.timeout)
+
+    def get_time(
+        self, tz: str, at: int | None = None, lang: str | None = None
+    ) -> requests.Response:
+        params = {"tz": tz, "at": at}
+        return self.session.get(
+            self._url("/time"),
+            params=params,
+            headers=_lang_headers(lang),
+            timeout=self.timeout,
+        )

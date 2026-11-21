@@ -2,18 +2,19 @@ import os
 import secrets
 import time
 import json
-
+import re
 
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from app.db import create_user, get_password, init_db, reset_users
 
 
 app = FastAPI(title="Mock Auth Service")
+init_db()
 
-USERS = {"alice@example.com": "Passw0rd!", "bob@example.com": "BobPass123!"}
 TOKENS: dict[str, dict] = {}  # token -> {"email": ..., "expires_at": ...}
 REFRESH_TOKENS: dict[str, dict] = {}  # refresh_token -> {"email": ..., "expires_at": ...}
 ACCESS_TOKEN_TTL_SECONDS = int(os.environ.get("ACCESS_TOKEN_TTL_SECONDS", "3600"))
@@ -22,6 +23,8 @@ LOCKOUT_SECONDS = int(os.environ.get("LOCKOUT_SECONDS", "300"))
 
 TWO_FA_USERS = {"bob@example.com"}
 TWO_FA_CODE = "123456"
+EMAIL_RE = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
+MIN_PASSWORD_LENGTH = 8
 PENDING_2FA: dict[str, str] = {}  # temp_token -> email
 
 MAX_FAILED_ATTEMPTS = 5
@@ -54,6 +57,11 @@ def _t(key: str, accept_language: str | None) -> str:
 
 
 class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class RegisterRequest(BaseModel):
     email: str
     password: str
 
@@ -100,7 +108,23 @@ def reset():
     LOCKED_UNTIL.clear()
     PENDING_2FA.clear()
     REFRESH_TOKENS.clear()
+    reset_users()
     return {"status": "reset"}
+
+
+@app.post("/register", status_code=201)
+def register(body: RegisterRequest, accept_language: str | None = Header(default=None)):
+    if not body.email.strip() or not body.password:
+        raise HTTPException(
+            status_code=400, detail=_t("email_and_password_required", accept_language)
+        )
+    if not EMAIL_RE.fullmatch(body.email):
+        raise HTTPException(status_code=400, detail=_t("invalid_email", accept_language))
+    if len(body.password) < MIN_PASSWORD_LENGTH:
+        raise HTTPException(status_code=400, detail=_t("weak_password", accept_language))
+    if not create_user(body.email, body.password):
+        raise HTTPException(status_code=409, detail=_t("email_already_registered", accept_language))
+    return {"email": body.email, "status": "registered"}
 
 
 @app.post("/login")
@@ -118,7 +142,7 @@ def login(body: LoginRequest, accept_language: str | None = Header(default=None)
         FAILED_ATTEMPTS[body.email] = 0
 
     # Same message for unknown user and wrong password: do not leak which emails exist.
-    if USERS.get(body.email) != body.password:
+    if get_password(body.email) != body.password:
         count = FAILED_ATTEMPTS.get(body.email, 0) + 1
         FAILED_ATTEMPTS[body.email] = count
         if count >= MAX_FAILED_ATTEMPTS:

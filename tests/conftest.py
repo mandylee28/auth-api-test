@@ -18,6 +18,7 @@ env = {
     "ACCESS_TOKEN_TTL_SECONDS": "2",
     "REFRESH_TOKEN_TTL_SECONDS": "5",
     "LOCKOUT_SECONDS": "2",
+    "AUTH_DB_PATH": str(ROOT / ".test.db"),
 }
 
 

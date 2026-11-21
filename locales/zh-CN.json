@@ -13,5 +13,8 @@
   "time_message": "{country}现在是{month}月{day}日{hour:02d}:{minute:02d}",
   "country_bangkok": "泰国",
   "country_singapore": "新加坡",
-  "country_seoul": "韩国"
+  "country_seoul": "韩国",
+  "invalid_email": "邮箱格式不正确",
+  "weak_password": "密码太弱",
+  "email_already_registered": "该邮箱已注册"
 }

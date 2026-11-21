@@ -32,6 +32,14 @@ class AuthClient:
             timeout=self.timeout,
         )
 
+    def register(self, email: str, password: str, lang: str | None = None) -> requests.Response:
+        return self.session.post(
+            self._url("/register"),
+            json={"email": email, "password": password},
+            headers=_lang_headers(lang),
+            timeout=self.timeout,
+        )
+
     def verify_2fa(self, temp_token: str, code: str, lang: str | None = None) -> requests.Response:
         return self.session.post(
             self._url("/verify-2fa"),

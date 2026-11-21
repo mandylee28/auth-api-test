@@ -13,5 +13,8 @@
   "time_message": "{country} is now {month}/{day} {hour:02d}:{minute:02d}",
   "country_bangkok": "Thailand",
   "country_singapore": "Singapore",
-  "country_seoul": "South Korea"
+  "country_seoul": "South Korea",
+  "invalid_email": "invalid email address",
+  "weak_password": "password is too weak",
+  "email_already_registered": "email already registered"
 }

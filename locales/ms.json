@@ -13,5 +13,8 @@
   "time_message": "{country} sekarang {day}/{month} {hour:02d}:{minute:02d}",
   "country_bangkok": "Thailand",
   "country_singapore": "Singapura",
-  "country_seoul": "Korea Selatan"
+  "country_seoul": "Korea Selatan",
+  "invalid_email": "alamat e-mel tidak sah",
+  "weak_password": "kata laluan terlalu lemah",
+  "email_already_registered": "e-mel sudah didaftarkan"
 }

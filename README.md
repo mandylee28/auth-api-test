@@ -40,7 +40,6 @@ coverage combine # merge server coverage data
 
 coverage report -m # coverage report (CI enforces 100%)
 
-
 ```
 
 

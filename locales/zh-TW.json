@@ -3,7 +3,7 @@
   "account_locked": "帳號已鎖定",
   "invalid_credentials": "電子郵件或密碼不正確",
   "invalid_temp_token": "臨時令牌無效",
-  "invalid_2fa_code": "兩步驗證碼不正確",
+  "invalid_2fa_code": "2FA 驗證碼不正確",
   "invalid_refresh_token": "更新令牌無效",
   "refresh_token_expired": "更新令牌已過期",
   "missing_token": "缺少令牌",

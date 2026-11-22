@@ -40,6 +40,7 @@ coverage combine # merge server coverage data
 
 coverage report -m # coverage report (CI enforces 100%)
 
+
 ```
 
 
@@ -81,3 +82,4 @@ Week 3: GitHub Actions CI, HTML report, failure summary tool. (done)
 Week 4: lint and coverage gates, multilingual messages, cross-timezone time, SQLite storage, user registration. (done)
 
 Week 5: more `/time` timezones (Tokyo, London, New York), Crowdin translation management. (done)
+

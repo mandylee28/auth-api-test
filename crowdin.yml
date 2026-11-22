@@ -1,4 +1,3 @@
-# Crowdin sync config: English is the source, translations land in locales/<locale>.json.
 files:
   - source: /locales/en.json
     translation: /locales/%locale%.json

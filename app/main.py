@@ -224,6 +224,9 @@ TIMEZONE_COUNTRIES = {
     "Asia/Bangkok": "country_bangkok",
     "Asia/Singapore": "country_singapore",
     "Asia/Seoul": "country_seoul",
+    "Asia/Tokyo": "country_tokyo",
+    "Europe/London": "country_london",
+    "America/New_York": "country_new_york",
 }
 
 

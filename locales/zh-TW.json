@@ -14,6 +14,9 @@
   "country_bangkok": "泰國",
   "country_singapore": "新加坡",
   "country_seoul": "韓國",
+  "country_tokyo": "日本",
+  "country_london": "英國",
+  "country_new_york": "美國",
   "invalid_email": "電子郵件格式不正確",
   "weak_password": "密碼太弱",
   "email_already_registered": "此電子郵件已註冊"

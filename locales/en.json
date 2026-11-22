@@ -14,6 +14,9 @@
   "country_bangkok": "Thailand",
   "country_singapore": "Singapore",
   "country_seoul": "South Korea",
+  "country_tokyo": "Japan",
+  "country_london": "United Kingdom",
+  "country_new_york": "United States",
   "invalid_email": "invalid email address",
   "weak_password": "password is too weak",
   "email_already_registered": "email already registered"

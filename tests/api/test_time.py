@@ -67,7 +67,7 @@ def test_unknown_timezone_returns_400(client):
     assert resp.status_code == 400
     assert resp.json()["detail"] == "unknown timezone"
 
-    resp = client.get_time("Asia/Tokyo")
+    resp = client.get_time("Asia/Jakarta")
     assert resp.status_code == 400
     assert resp.json()["detail"] == "unknown timezone"
 
@@ -91,6 +91,18 @@ def test_unknown_timezone_returns_400(client):
         ("zh-CN", "Asia/Seoul", "韩国", "韩国现在是11月22日02:00"),
         ("zh-TW", "Asia/Seoul", "韓國", "韓國現在是11月22日02:00"),
         ("ms", "Asia/Seoul", "Korea Selatan", "Korea Selatan sekarang 22/11 02:00"),
+        ("en", "Asia/Tokyo", "Japan", "Japan is now 11/22 02:00"),
+        ("zh-CN", "Asia/Tokyo", "日本", "日本现在是11月22日02:00"),
+        ("zh-TW", "Asia/Tokyo", "日本", "日本現在是11月22日02:00"),
+        ("ms", "Asia/Tokyo", "Jepun", "Jepun sekarang 22/11 02:00"),
+        ("en", "Europe/London", "United Kingdom", "United Kingdom is now 11/21 17:00"),
+        ("zh-CN", "Europe/London", "英国", "英国现在是11月21日17:00"),
+        ("zh-TW", "Europe/London", "英國", "英國現在是11月21日17:00"),
+        ("ms", "Europe/London", "United Kingdom", "United Kingdom sekarang 21/11 17:00"),
+        ("en", "America/New_York", "United States", "United States is now 11/21 12:00"),
+        ("zh-CN", "America/New_York", "美国", "美国现在是11月21日12:00"),
+        ("zh-TW", "America/New_York", "美國", "美國現在是11月21日12:00"),
+        ("ms", "America/New_York", "Amerika Syarikat", "Amerika Syarikat sekarang 21/11 12:00"),
     ],
 )
 def test_time_message_is_localized(client, lang, tz, country, message):
